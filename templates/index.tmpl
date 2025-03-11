@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/public/assets/style.css" rel="stylesheet" />
+  </head>
+  <body class="bg-zinc-200 dark:bg-stone-900">
+    <main class="grid lg:grid-cols-2">
+    <div class="flex flex-col items-center max-w-3xl mx-auto text-center">
+      <div class="text-xl dark:bg-stone-700 dark:text-gray-200 bg-white my-4 p-4 mx-4">
+        {{ .battery }}
+      </div>
+
+      <div class="text-xl grid grid-cols-2 bg-white dark:bg-stone-700 dark:text-gray-200 p-2 divide-x-2
+      dark:divide-stone-500 divide-gray-200">
+          <div id="poweroff" class="py-2 px-4 group">
+            <div class="group-active:scale-[0.85] transition-all duration-200">
+            poweroff
+            </div>
+          </div>
+
+          <div id="reboot" class="py-2 px-4 group">
+            <div class="group-active:scale-[0.85] transition-all duration-200">
+            reboot
+            </div>
+          </div>
+
+      </div>
+
+    </div>
+      <div class="mx-4 my-4 flex flex-col gap-2">
+        <div class="py-2 px-4 group text-xl dark:bg-stone-700 dark:text-gray-200 bg-white">
+          <div class="group-active:scale-[0.85] max-w-fit transition-all duration-200">
+            <a href="{{ .serverAddr }}:9091">Transmission</a>
+          </div>
+        </div>
+
+        <div class="py-2 px-4 group text-xl dark:bg-stone-700 dark:text-gray-200 bg-white">
+          <div class="group-active:scale-[0.85] max-w-fit transition-all duration-200">
+            <a href="{{ .serverAddr }}:8096">Jellyfin</a>
+          </div>
+        </div>
+    </div>
+    </main>
+  </body>
+  <script>
+    document.querySelector('#poweroff').addEventListener('click', () => {fetch('/poweroff')});
+    document.querySelector('#reboot').addEventListener('click', () => {fetch('/reboot')});
+  </script>
+</html>

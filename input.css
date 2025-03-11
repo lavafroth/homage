@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: spacegrotesk;  src: url("/public/assets/font.ttf");
+  }
+
+  @theme {
+    --font-display: "spacegrotesk", "sans-serif";
+  }
+}
