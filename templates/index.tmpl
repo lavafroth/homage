@@ -29,18 +29,18 @@
       </div>
 
     </div>
-      <div class="mx-4 my-4 flex flex-col gap-2">
-        <div class="py-2 px-4 group text-xl dark:bg-stone-700 dark:text-gray-200 bg-white">
-          <div class="group-active:scale-[0.85] max-w-fit transition-all duration-200">
-            <a href="{{ .serverAddr }}:9091">Transmission</a>
+    <div class="mx-4 my-4 flex flex-col gap-2">
+        <a class="group py-2 px-4 text-xl dark:bg-stone-700 dark:text-gray-200 bg-white" href="{{ .serverAddr }}:9091">
+          <div class="transition-all duration-200 group-active:scale-[0.95] max-w-fit">
+            Transmission
           </div>
-        </div>
+        </a>
 
-        <div class="py-2 px-4 group text-xl dark:bg-stone-700 dark:text-gray-200 bg-white">
-          <div class="group-active:scale-[0.85] max-w-fit transition-all duration-200">
-            <a href="{{ .serverAddr }}:8096">Jellyfin</a>
+        <a class="group py-2 px-4 text-xl dark:bg-stone-700 dark:text-gray-200 bg-white" href="{{ .serverAddr }}:8096">
+          <div class="transition-all duration-200 group-active:scale-[0.95] max-w-fit">
+            Jellyfin
           </div>
-        </div>
+        </a>
     </div>
     </main>
   </body>
