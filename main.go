@@ -16,16 +16,25 @@ var embeddedFiles embed.FS
 
 const serverAddr string = "http://192.168.12.1"
 
-func batteryCheck() string {
-	cmds := []string{"/run/current-system/sw/bin/acpi", "acpi"}
-	for _, cmd := range cmds {
-		acpi := exec.Command(cmd)
-		acpiOutput, err := acpi.CombinedOutput()
-		if err == nil {
-			return string(acpiOutput)
-		}
+func mustGetBinPath(name string) string {
+	cmd, err := exec.LookPath(name)
+	if err != nil {
+		log.Fatal(err)
 	}
-	return string("Battery data unavailable")
+	return cmd
+}
+
+func batteryCheck() string {
+	cmd, err := exec.LookPath("acpi")
+	if err != nil {
+		return string("Battery data unavailable")
+	}
+	acpi := exec.Command(cmd)
+	acpiOutput, err := acpi.CombinedOutput()
+	if err == nil {
+		return string(acpiOutput)
+	}
+	return string(acpiOutput)
 }
 
 func IsLocalIP(c *gin.Context) bool {
@@ -50,8 +59,7 @@ func main() {
 			c.Status(http.StatusForbidden)
 			return
 		}
-		cmd := exec.Command("/run/current-system/sw/sbin/poweroff")
-		if err := cmd.Run(); err != nil {
+		if err := exec.Command(mustGetBinPath("poweroff")).Run(); err != nil {
 			log.Fatal(err)
 		}
 		c.Status(http.StatusOK)
@@ -62,8 +70,7 @@ func main() {
 			c.Status(http.StatusForbidden)
 			return
 		}
-		cmd := exec.Command("/run/current-system/sw/sbin/reboot")
-		if err := cmd.Run(); err != nil {
+		if err := exec.Command(mustGetBinPath("reboot")).Run(); err != nil {
 			log.Fatal(err)
 		}
 		c.Status(http.StatusOK)
