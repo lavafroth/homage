@@ -4,13 +4,13 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"os/exec"
 	"strings"
 
 	"github.com/distatus/battery"
-	"github.com/gin-gonic/gin"
 )
 
 //go:embed assets templates
@@ -34,49 +34,52 @@ func batteryCheck() string {
 
 	output := ""
 	for i, battery := range batteries {
-		output += fmt.Sprintf("Battery %d %.02f%% %s at %f mW\n", i, battery.Current/battery.Full*100, battery.State.String(), battery.ChargeRate)
+		output += fmt.Sprintf("Battery %d %.02f%% %s at %.02f mW\n", i, battery.Current/battery.Full*100, battery.State.String(), battery.ChargeRate)
 	}
 	return output
 }
 
-func IsLocalIP(c *gin.Context) bool {
-	return strings.HasPrefix(c.RemoteIP(), "192.168.12.")
+func IsLocalIP(r *http.Request) bool {
+	return strings.HasPrefix(r.RemoteAddr, "192.168.")
 }
 
 func main() {
-	router := gin.Default()
-	templ := template.Must(template.New("").ParseFS(embeddedFiles, "templates/*"))
-	router.SetHTMLTemplate(templ)
+	assets, err := fs.Sub(embeddedFiles, "assets")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.tmpl", gin.H{
+	templ := template.Must(template.New("").ParseFS(embeddedFiles, "templates/index.tmpl"))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		templ.ExecuteTemplate(w, "index.tmpl", map[string]any{
 			"battery":    batteryCheck(),
 			"serverAddr": serverAddr,
 		})
-	})
 
-	router.StaticFS("/public", http.FS(embeddedFiles))
-	router.GET("/poweroff", func(c *gin.Context) {
-		if !IsLocalIP(c) {
-			c.Status(http.StatusForbidden)
+	})
+	http.HandleFunc("/poweroff", func(w http.ResponseWriter, r *http.Request) {
+		if !IsLocalIP(r) {
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 		if err := exec.Command(mustGetBinPath("poweroff")).Run(); err != nil {
 			log.Fatal(err)
 		}
-		c.Status(http.StatusOK)
+		w.WriteHeader(http.StatusOK)
 	})
 
-	router.GET("/reboot", func(c *gin.Context) {
-		if !IsLocalIP(c) {
-			c.Status(http.StatusForbidden)
+	http.HandleFunc("/reboot", func(w http.ResponseWriter, r *http.Request) {
+		if !IsLocalIP(r) {
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 		if err := exec.Command(mustGetBinPath("reboot")).Run(); err != nil {
 			log.Fatal(err)
 		}
-		c.Status(http.StatusOK)
+		w.WriteHeader(http.StatusOK)
 	})
 
-	router.Run(":7047")
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(assets))))
+
+	log.Fatal(http.ListenAndServe(":7047", nil))
 }
