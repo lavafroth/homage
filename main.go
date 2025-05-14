@@ -2,12 +2,14 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os/exec"
 	"strings"
 
+	"github.com/distatus/battery"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,16 +27,16 @@ func mustGetBinPath(name string) string {
 }
 
 func batteryCheck() string {
-	cmd, err := exec.LookPath("acpi")
+	batteries, err := battery.GetAll()
 	if err != nil {
 		return string("Battery data unavailable")
 	}
-	acpi := exec.Command(cmd)
-	acpiOutput, err := acpi.CombinedOutput()
-	if err == nil {
-		return string(acpiOutput)
+
+	output := ""
+	for i, battery := range batteries {
+		output += fmt.Sprintf("Battery %d %.02f%% %s at %f mW\n", i, battery.Current/battery.Full*100, battery.State.String(), battery.ChargeRate)
 	}
-	return string(acpiOutput)
+	return output
 }
 
 func IsLocalIP(c *gin.Context) bool {
