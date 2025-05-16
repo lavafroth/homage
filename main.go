@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
@@ -26,17 +25,30 @@ func mustGetBinPath(name string) string {
 	return cmd
 }
 
-func batteryCheck() string {
+type BatteryStats struct {
+	Id         int
+	Percentage float32
+	State      string
+	Rate       float32
+}
+
+func batteryCheck() []BatteryStats {
+	stats := []BatteryStats{}
 	batteries, err := battery.GetAll()
 	if err != nil {
-		return string("Battery data unavailable")
+		return stats
 	}
 
-	output := ""
 	for i, battery := range batteries {
-		output += fmt.Sprintf("Battery %d %.02f%% %s at %.02f mW\n", i, battery.Current/battery.Full*100, battery.State.String(), battery.ChargeRate)
+		stat := BatteryStats{
+			Id:         i,
+			Percentage: float32(battery.Current / battery.Full * 100),
+			State:      battery.State.String(),
+			Rate:       float32(battery.ChargeRate),
+		}
+		stats = append(stats, stat)
 	}
-	return output
+	return stats
 }
 
 func IsLocalIP(r *http.Request) bool {

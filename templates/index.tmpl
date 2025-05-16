@@ -6,14 +6,29 @@
     <link href="/static/style.css" rel="stylesheet" />
   </head>
   <body class="bg-zinc-200 dark:bg-stone-900">
-    <main class="grid lg:grid-cols-2">
-    <div class="flex flex-col items-center max-w-3xl mx-auto text-center">
-      <div class="text-xl dark:bg-stone-700 dark:text-gray-200 bg-white my-4 p-4 mx-4">
-        {{ .battery }}
+    <main class="grid lg:grid-cols-2 m-4 gap-4">
+    <div class="flex flex-col items-center gap-4">
+      <div class="flex flex-col
+      lg:flex-row gap-4
+      dark:divide-stone-500 divide-gray-200
+      text-xl dark:bg-stone-700 dark:text-gray-200 bg-white p-4 w-full tile">
+        {{ if eq (len .battery) 0 }}
+          Battery data unavailable
+        {{ end }}
+        {{ range .battery }}
+        <div>
+          Battery {{ .Id }}
+          <ul class="list-[square] list-inside">
+              <li>Level: {{ printf "%.02f" .Percentage }}%</li>
+              <li>State: {{ .State }}</li>
+              <li>Rate: {{ printf "%.02f" .Rate }} mW</li>
+          </ul>
+        </div>
+        {{ end }}
       </div>
 
       <div class="text-xl grid grid-cols-2 bg-white dark:bg-stone-700 dark:text-gray-200 p-2 divide-x-2
-      dark:divide-stone-500 divide-gray-200">
+      dark:divide-stone-500 divide-gray-200 text-center">
           <div id="poweroff" class="py-2 px-4 group">
             <div class="group-active:scale-[0.85] transition-all duration-200">
             poweroff
@@ -29,7 +44,7 @@
       </div>
 
     </div>
-    <div class="mx-4 my-4 flex flex-col gap-2">
+    <div class="flex flex-col gap-2">
         <a class="group py-2 px-4 text-xl dark:bg-stone-700 dark:text-gray-200 bg-white" href="{{ .serverAddr }}:9091">
           <div class="transition-all duration-200 group-active:scale-[0.95] max-w-fit">
             Transmission
