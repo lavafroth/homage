@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  .tile {
+    clip-path: polygon(0 0, 0 calc(100% - 1rem), 1rem 100%, 100% 100%, 100% 1rem, calc(100% - 1rem) 0);
+  }
+
   @font-face {
     font-family: spacegrotesk;  src: url("/public/assets/font.ttf");
   }
