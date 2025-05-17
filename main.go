@@ -2,10 +2,14 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -14,8 +18,6 @@ import (
 
 //go:embed assets templates
 var embeddedFiles embed.FS
-
-const serverAddr string = "http://192.168.12.1"
 
 func mustGetBinPath(name string) string {
 	cmd, err := exec.LookPath(name)
@@ -30,6 +32,11 @@ type BatteryStats struct {
 	Percentage float32
 	State      string
 	Rate       float32
+}
+
+type Config struct {
+	Host string
+	Port uint16
 }
 
 func batteryCheck() []BatteryStats {
@@ -55,17 +62,36 @@ func IsLocalIP(r *http.Request) bool {
 	return strings.HasPrefix(r.RemoteAddr, "192.168.")
 }
 
+func ReadConfig() (*Config, error) {
+	configRaw, err := os.ReadFile("config.json")
+	defaultConfig := Config{
+		Host: "192.168.12.1",
+		Port: 80,
+	}
+	if err != nil {
+		return &defaultConfig, errors.New("failed to read config.json")
+	}
+
+	var config Config
+	if err = json.Unmarshal(configRaw, &config); err != nil {
+		return &defaultConfig, errors.New("failed to parse config.json")
+	}
+	return &config, nil
+}
+
 func main() {
 	assets, err := fs.Sub(embeddedFiles, "assets")
+
+	config, err := ReadConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("warn: %q", err)
 	}
 
 	templ := template.Must(template.New("").ParseFS(embeddedFiles, "templates/index.tmpl"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		templ.ExecuteTemplate(w, "index.tmpl", map[string]any{
 			"battery":    batteryCheck(),
-			"serverAddr": serverAddr,
+			"serverAddr": config.Host,
 		})
 
 	})
@@ -93,5 +119,6 @@ func main() {
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(assets))))
 
-	log.Fatal(http.ListenAndServe(":7047", nil))
+	portString := fmt.Sprintf(":%d", config.Port)
+	log.Fatal(http.ListenAndServe(portString, nil))
 }

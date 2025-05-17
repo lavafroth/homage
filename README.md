@@ -11,6 +11,6 @@ tailwindcss -i input.css -o assets/style.css
 go build .
 ```
 
-Optionally, modify the server address to that of your home lab.
+Optionally, modify the `config.json` to fit your home lab.
 
-The above command builds a single binary with the project name. Drop it on the server and execute it.
+The above command builds a single binary. Drop it on the server and execute it.
