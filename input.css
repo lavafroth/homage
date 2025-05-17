@@ -6,12 +6,37 @@
   .tile {
     clip-path: polygon(0 0, 0 calc(100% - 1rem), 1rem 100%, 100% 100%, 100% 1rem, calc(100% - 1rem) 0);
   }
+  
+  .plate {
+    clip-path: polygon(0 0, 0 calc(100% - 1rem), 1rem 100%, 100% 100%, 100% 1rem, 100% 0);
+  }
+
+
+  .separator {
+    background: repeating-linear-gradient(
+        -45deg,
+        theme(colors.white),
+        theme(colors.white) .1rem,
+        rgba(0,0,0,0) .1rem,
+        rgba(0,0,0,0) .4rem);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .separator {
+      background: repeating-linear-gradient(
+          -45deg,
+          theme(colors.stone.700),
+          theme(colors.stone.700) .1rem,
+          rgba(0,0,0,0) .1rem,
+          rgba(0,0,0,0) .4rem);
+    }
+  }
 
   @font-face {
-    font-family: spacegrotesk;  src: url("/public/assets/font.ttf");
+    font-family: orbitron;  src: url("/static/font.ttf");
   }
 
   @theme {
-    --font-display: "spacegrotesk", "sans-serif";
+    --font-display: "orbitron", "monospace";
   }
 }
