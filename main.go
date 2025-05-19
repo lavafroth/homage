@@ -1,14 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"embed"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -16,8 +17,11 @@ import (
 	"github.com/distatus/battery"
 )
 
-//go:embed assets templates
+//go:embed assets
 var embeddedFiles embed.FS
+
+//go:embed index.tmpl
+var index string
 
 func mustGetBinPath(name string) string {
 	cmd, err := exec.LookPath(name)
@@ -35,8 +39,13 @@ type BatteryStats struct {
 }
 
 type Config struct {
-	Host string
-	Port uint16
+	Port     string
+	Services []Service
+}
+
+type Service struct {
+	Name string
+	Uri  string
 }
 
 func batteryCheck() []BatteryStats {
@@ -63,18 +72,39 @@ func IsLocalIP(r *http.Request) bool {
 }
 
 func ReadConfig() (*Config, error) {
-	configRaw, err := os.ReadFile("config.json")
-	defaultConfig := Config{
-		Host: "192.168.12.1",
-		Port: 80,
+	file, err := os.Open("config.txt")
+	config := Config{
+		Port:     ":80",
+		Services: []Service{},
 	}
 	if err != nil {
-		return &defaultConfig, errors.New("failed to read config.json")
+		return &config, errors.New("failed to open config.txt")
 	}
+	reader := bufio.NewScanner(file)
+	for reader.Scan() {
+		line := reader.Text()
+		lastSpace := strings.LastIndex(line, " ")
+		before, after := line[:lastSpace], line[lastSpace+1:]
 
-	var config Config
-	if err = json.Unmarshal(configRaw, &config); err != nil {
-		return &defaultConfig, errors.New("failed to parse config.json")
+		// First the port
+		if before == "port" {
+			config.Port = ":" + after
+			continue
+		}
+
+		// Now the services,
+		// sanity check to ensure the second field is a URL
+		if _, err := url.Parse(after); err != nil {
+			return nil, err
+		}
+
+		config.Services = append(config.Services, Service{
+			Name: before,
+			Uri:  after,
+		})
+	}
+	if err := reader.Err(); err != nil {
+		return nil, fmt.Errorf("while reading config: %v", err)
 	}
 	return &config, nil
 }
@@ -87,11 +117,11 @@ func main() {
 		log.Printf("warn: %q", err)
 	}
 
-	templ := template.Must(template.New("").ParseFS(embeddedFiles, "templates/index.tmpl"))
+	templ := template.Must(template.New("").Parse(index))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		templ.ExecuteTemplate(w, "index.tmpl", map[string]any{
-			"battery":    batteryCheck(),
-			"serverAddr": config.Host,
+		templ.Execute(w, map[string]any{
+			"battery":  batteryCheck(),
+			"services": config.Services,
 		})
 
 	})
@@ -119,6 +149,5 @@ func main() {
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(assets))))
 
-	portString := fmt.Sprintf(":%d", config.Port)
-	log.Fatal(http.ListenAndServe(portString, nil))
+	log.Fatal(http.ListenAndServe(config.Port, nil))
 }

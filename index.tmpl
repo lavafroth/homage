@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="/static/style.css" rel="stylesheet" />
   </head>
-  <body class="text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-stone-900">
+  <body class="text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-stone-900 font-[orbitron]">
     <main class="grid lg:grid-cols-2 m-4 gap-4">
     <div class="flex flex-col items-center gap-4">
       <div class="flex flex-col
@@ -42,17 +42,13 @@
 
     </div>
     <div class="flex flex-col gap-2">
-        <a class="group py-2 px-4 text-xl dark:bg-stone-700 bg-white plate" href="{{ .serverAddr }}:9091">
+      {{ range .services }}
+        <a class="group py-2 px-4 text-xl dark:bg-stone-700 bg-white plate" href="{{ .Uri }}">
           <div class="transition-all duration-200 group-active:scale-[0.95] max-w-fit">
-            Transmission
+            {{ .Name }}
           </div>
         </a>
-
-        <a class="group py-2 px-4 text-xl dark:bg-stone-700 bg-white plate" href="{{ .serverAddr }}:8096">
-          <div class="transition-all duration-200 group-active:scale-[0.95] max-w-fit">
-            Jellyfin
-          </div>
-        </a>
+      {{ end }}
     </div>
     </main>
   </body>
