@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -68,7 +69,10 @@ func batteryCheck() []BatteryStats {
 }
 
 func IsLocalIP(r *http.Request) bool {
-	return strings.HasPrefix(r.RemoteAddr, "192.168.")
+	if parsed := net.ParseIP(r.RemoteAddr); parsed != nil {
+		return parsed.IsPrivate()
+	}
+	return false
 }
 
 func ReadConfig() (*Config, error) {
