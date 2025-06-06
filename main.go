@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -128,6 +129,13 @@ func main() {
 			"services": config.Services,
 		})
 
+	})
+	http.HandleFunc("/api/v1/battery", func(w http.ResponseWriter, r *http.Request) {
+		marshal, err := json.Marshal(batteryCheck())
+		if err != nil {
+			log.Fatal(err)
+		}
+		w.Write(marshal)
 	})
 	http.HandleFunc("/poweroff", func(w http.ResponseWriter, r *http.Request) {
 		if !IsLocalIP(r) {
