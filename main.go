@@ -76,8 +76,8 @@ func IsLocalIP(r *http.Request) bool {
 	return false
 }
 
-func ReadConfig() (*Config, error) {
-	file, err := os.Open("config.txt")
+func ReadConfig(configPath string) (*Config, error) {
+	file, err := os.Open(configPath)
 	config := Config{
 		Port:     ":80",
 		Services: []Service{},
@@ -117,7 +117,11 @@ func ReadConfig() (*Config, error) {
 func main() {
 	assets, err := fs.Sub(embeddedFiles, "assets")
 
-	config, err := ReadConfig()
+	configPath := "config.txt"
+	if len(os.Args) > 1 {
+		configPath = os.Args[1]
+	}
+	config, err := ReadConfig(configPath)
 	if err != nil {
 		log.Printf("warn: %q", err)
 	}
